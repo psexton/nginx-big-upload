@@ -105,31 +105,28 @@ function handler(storage_path)
     end,
 
     on_body_end = function (self, ctx)
-      self.real_size = ctx.range_from + ctx.content_length
-      shactx_to_file(ctx.file_path, self.sha1_ctx, self.real_size)
-      local md = ffi.new("char[?]", 20)
-      if crypto.SHA1_Final(md, self.sha1_ctx) == 0 then
-        return string.format("SHA1 finalization failed")
-      end
-      local hexresult = ffi.string(md, 20):tohex()
-      if ctx.sha1 then
-        -- already provided by client, let's check it
-        if ctx.sha1 ~= hexresult then
-          return {400, string.format("Chunk SHA-1 mismatch client=[%s] server=[%s]", ctx.sha1, hexresult)}
+      if self.skip_bytes == 0 then
+        -- In overlapping chunk upload scenario. Save and return chunk's SHA-1 result only if there is no more bytes to skip,
+        -- because we only know SHA-1 of farthest chunk uploaded and nothing in between.
+
+        self.real_size = ctx.range_from + ctx.content_length
+        shactx_to_file(ctx.file_path, self.sha1_ctx, self.real_size)
+
+        local md = ffi.new("char[?]", 20)
+        if crypto.SHA1_Final(md, self.sha1_ctx) == 0 then
+          return string.format("SHA1 finalization failed")
         end
+        local hexresult = ffi.string(md, 20):tohex()
+        if ctx.sha1 then
+          -- already provided by client, let's check it
+          if ctx.sha1 ~= hexresult then
+            return {400, string.format("Chunk SHA-1 mismatch client=[%s] server=[%s]", ctx.sha1, hexresult)}
+          end
+        end
+        ctx.sha1 = hexresult
       end
-      ctx.sha1 = hexresult
+
       if ctx.sha1 then ngx.header['X-SHA1'] = ctx.sha1 end
     end
   }
 end
-
---
---local hd = handler()
---local ctx = {}
----print(hd:on_body_start(ctx))
---print(ffi.string(hd.sha1_ctx, ffi.sizeof(hd.sha1_ctx)):tohex())
---print(hd:on_body(ctx, "dupajasiadupasiastasdospkdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaapkdposdoi"))
----print(hd:on_body_end(ctx))
----print(ctx.sha1:tohex())
----print(ffi.string(hd.sha1_ctx, ffi.sizeof(hd.sha1_ctx)):tohex())

@@ -120,7 +120,6 @@ class Sha1HandlerTest < Test::Unit::TestCase
 
     params = CGI::parse(res.body)
     assert_equal ["988dced4ecae71ee10dd5d8ddb97adb62c537704"], params['sha1']
-
   end
 
   #If next chunk overlaps with already uploaded SHA1 shouldn't be broken
@@ -131,7 +130,7 @@ class Sha1HandlerTest < Test::Unit::TestCase
               'Content-Range' => 'bytes 0-4/10'
 
     assert_equal "201", res.code
-    assert_equal "138d033e6d97d507ae613bd0c29b7ed365f19395", res.header["X-SHA1"]
+    assert_equal "138d033e6d97d507ae613bd0c29b7ed365f19395", res.header["X-SHA1"]  #SHA-1 of 'Part1'
 
     res = put "t1Part2",   # here goes some content from first request
               'Session-Id' => 12359,
@@ -139,10 +138,40 @@ class Sha1HandlerTest < Test::Unit::TestCase
               'Content-Range' => 'bytes 3-9/10'
 
     assert_equal "202", res.code, "#{res.code} #{res.body}"
-    assert_equal "988dced4ecae71ee10dd5d8ddb97adb62c537704", res.header["X-SHA1"]  #CRC32 of 'Part1Part2'
+    assert_equal "988dced4ecae71ee10dd5d8ddb97adb62c537704", res.header["X-SHA1"]  #SHA-1 of 'Part1Part2'
 
     params = CGI::parse(res.body)
     assert_equal ["988dced4ecae71ee10dd5d8ddb97adb62c537704"], params['sha1']
+  end
+
+  #More complicated overlapping scenario with one request body to ignore by sha1 engine
+  def test_sha1_overlapping2
+    res = put "PartOne",
+              'Session-Id' => 12360,
+              'X-SHA1' => "dbea4eb50b509799a715084d0eb3d2c68972a068",
+              'Content-Range' => 'bytes 0-6/14'
+
+    assert_equal "201", res.code
+    assert_equal "dbea4eb50b509799a715084d0eb3d2c68972a068", res.header["X-SHA1"]  #SHA-1 of 'PartOne'
+
+    res = put "tOn",   # here goe fragment of data sent previously in req 1
+              'Session-Id' => 12360,
+              'X-SHA1' => "f09ecfe7b56886772924c2e56c845f38cb037014",
+              'Content-Range' => 'bytes 3-5/14'
+
+    assert_equal "201", res.code, "#{res.code} #{res.body}"
+    assert_equal "f09ecfe7b56886772924c2e56c845f38cb037014", res.header["X-SHA1"]  #SHA-1 of 'PartOn', actually duplicated from request header
+
+    res = put "ePartTwo",   # here goes continuation of data from req 1 and remaining data
+              'Session-Id' => 12360,
+              'X-SHA1' => "914e861a274f049660797491968aebf9118db9fd",
+              'Content-Range' => 'bytes 6-13/14'
+
+    assert_equal "202", res.code, "#{res.code} #{res.body}"
+    assert_equal "914e861a274f049660797491968aebf9118db9fd", res.header["X-SHA1"]  #SHA-1 of 'PartOnePartTwo'
+
+    params = CGI::parse(res.body)
+    assert_equal ["914e861a274f049660797491968aebf9118db9fd"], params['sha1']
   end
 
 
