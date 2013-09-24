@@ -64,7 +64,7 @@ If you work with Ubuntu (12.04 Precise Pangolin LTS) follow these steps:
 
         #Edit debian/rules to remove modules you don't need in nginx-extras configuration,
         #eventually reconfigure nginx-full. Run build next:
-        dpkg-buildpackage -b
+        sudo dpkg-buildpackage -b
 
         #Build goes here...
 
