@@ -25,9 +25,9 @@ Tested with:
 This module requires LuaJIT and nginx with [HttpLuaModule](http://wiki.nginx.org/HttpLuaModule) installed in your system.
 If you work with Ubuntu (12.04 Precise Pangolin LTS) follow these steps:
 
-- Install LuaJIT using official packages or from [LuaJIT source](http://www.lua.org/) which should be up-to-date.
+- Install LuaJIT using official packages or from [LuaJIT source](http://www.lua.org/) which should be up-to-date. (If you're installing from packages, you need the development headers for LuaJIT, or compilation will fail much later in this process.)
 
-        sudo apt-get install luajit
+        sudo apt-get install luajit libluajit-5.1-dev
 
 - You have to build nginx from sources with Lua module and LuaJIT support. Precompiled nginx packages depend on Lua interpreter instead of faster LuaJIT.
 
