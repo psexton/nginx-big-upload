@@ -41,6 +41,10 @@ If you work with Ubuntu (12.04 Precise Pangolin LTS) follow these steps:
         #Update package lists
         sudo apt-get update
 
+        #If you don't have the dpkg-dev or libgd2-noxpm packages, install them.
+        #The following apt-get commands will fail otherwise.
+        sudo apt-get install dpkg-dev libgd2-noxpm
+
         #Create and go to directory for nginx source and compilation task, e.g. ~/mynginx,
         #This will download nginx sources with Ubuntu/Debian package configs
         sudo apt-get source nginx
