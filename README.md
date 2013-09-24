@@ -46,16 +46,20 @@ If you work with Ubuntu (12.04 Precise Pangolin LTS) follow these steps:
         sudo apt-get install dpkg-dev libgd2-noxpm
 
         #Create and go to directory for nginx source and compilation task, e.g. ~/mynginx,
+        mkdir ~/mynginx
+        cd ~/mynginx
         #This will download nginx sources with Ubuntu/Debian package configs
         sudo apt-get source nginx
         sudo apt-get build-dep nginx
 
         #Export LuaJIT paths. Find them with `locate libluajit`
+        #You may need to run `sudo updatedb` if locate doesn't find them
 
+        sudo updatedb
         export LUAJIT_LIB=/usr/lib/x86_64-linux-gnu
         export LUAJIT_INC=/usr/include/luajit-2.0
 
-        #Go to
+        #Go to the nginx-1.4.1 subdirectory
         cd ~/mynginx/nginx-1.4.1
 
         #Edit debian/rules to remove modules you don't need in nginx-extras configuration,
@@ -64,8 +68,10 @@ If you work with Ubuntu (12.04 Precise Pangolin LTS) follow these steps:
 
         #Build goes here...
 
-        #Install nginx-extras
-        sudo dpkg -i nginx-extras_1.4.1-1ppa0~precise_amd64.deb
+        #Install the nginx-common and nginx-extras packages we made
+        cd ..
+        sudo dpkg -i nginx-common_1.4.1-1ppa1~precise_all.deb
+        sudo dpkg -i nginx-extras_1.4.1-1ppa1~precise_amd64.deb
 
         #Ensure nginx is in proper version
         nginx -v
